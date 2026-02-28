@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sync Scoreboard</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; }
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .scores { display: flex; gap: 50px; font-size: 10rem; font-weight: bold; }
+        .team { display: flex; flex-direction: column; }
+        .label { font-size: 2rem; color: #aaa; text-transform: uppercase; }
+        button { padding: 15px 30px; font-size: 1.5rem; cursor: pointer; margin: 10px; background: #444; color: white; border: none; border-radius: 8px; }
+        button:hover { background: #666; }
+        .controls { margin-top: 20px; padding: 20px; border-top: 1px solid #444; }
+        #display-view { display: none; } /* Hidden by default */
+    </style>
+</head>
+<body>
+
+    <div id="display-view" class="container">
+        <div class="scores">
+            <div class="team">
+                <div class="label">Home</div>
+                <div id="home-score-disp">0</div>
+            </div>
+            <div class="team">
+                <div class="label">Guest</div>
+                <div id="guest-score-disp">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="controller-view" class="container">
+        <h1>Scoreboard Controller</h1>
+        <div class="scores" style="font-size: 5rem;">
+            <div id="home-score-ctrl">0</div>
+            <div id="guest-score-ctrl">0</div>
+        </div>
+        <div class="controls">
+            <div>
+                <button onclick="changeScore('home', 1)">Home +1</button>
+                <button onclick="changeScore('home', -1)">Home -1</button>
+            </div>
+            <div>
+                <button onclick="changeScore('guest', 1)">Guest +1</button>
+                <button onclick="changeScore('guest', -1)">Guest -1</button>
+            </div>
+            <button onclick="reset()" style="background: #a33;">Reset All</button>
+            <br><br>
+            <button onclick="switchToDisplay()" style="background: #33a;">Launch Display Mode</button>
+        </div>
+    </div>
+
+    <script>
+        const bc = new BroadcastChannel('scoreboard_channel');
+        let state = { home: 0, guest: 0 };
+
+        // Handle incoming messages from the other tab
+        bc.onmessage = (event) => {
+            state = event.data;
+            updateUI();
+        };
+
+        function changeScore(team, amount) {
+            state[team] = Math.max(0, state[team] + amount);
+            updateUI();
+            bc.postMessage(state); // Send to other tab
+        }
+
+        function reset() {
+            state = { home: 0, guest: 0 };
+            updateUI();
+            bc.postMessage(state);
+        }
+
+        function updateUI() {
+            document.getElementById('home-score-ctrl').innerText = state.home;
+            document.getElementById('guest-score-ctrl').innerText = state.guest;
+            document.getElementById('home-score-disp').innerText = state.home;
+            document.getElementById('guest-score-disp').innerText = state.guest;
+        }
+
+        function switchToDisplay() {
+            document.getElementById('controller-view').style.display = 'none';
+            document.getElementById('display-view').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
